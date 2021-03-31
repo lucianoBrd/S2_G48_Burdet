@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <signal.h>
 
 #include <net/if.h>
 #include <sys/ioctl.h>
@@ -13,13 +12,6 @@
 #include <linux/can/raw.h>
 
 /* Compile : gcc test.c -o test */
-
-static volatile int keepRunning = 1;
-
-void intHandler(int dummy) {
-    keepRunning = 0;
-
-} /* Catch SIGINT */
 
 void closeSocket(int s) {
 	if (close(s) < 0) {
@@ -31,24 +23,22 @@ void closeSocket(int s) {
 
 int main(int argc, char **argv)
 {
-	int s; 
+	int s, nbytes; 
 	struct sockaddr_can addr;
 	struct ifreq ifr;
 	struct can_frame frame;
-
-	/* Catch SIGINT */
-	signal(SIGINT, intHandler);
+	struct can_filter rfilter[1];
 
 	printf("TP1\r\n");
 
 	if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
-		perror("Socket");
+		perror("Socket send");
 		return 1;
 
-	} /*  Open connexion */
+	} /* Open socket */
 
 	/* Use vcan0 */
-	strcpy(ifr.ifr_name, "vcan0" );
+	strcpy(ifr.ifr_name, "vcan0");
 	ioctl(s, SIOCGIFINDEX, &ifr);
 
 	/* Initialize */
@@ -66,26 +56,57 @@ int main(int argc, char **argv)
 
 	} /* Bind */
 
-	/* Set id of message */
-	frame.can_id = 0x8123;
-	/* Set size in bytes of data */
-	frame.can_dlc = 8;
-	/* Set data */
-	sprintf(frame.data, "8 bytes");
+	if (fork() == 0) {
+		/* Set id of message */
+		frame.can_id = 0x8123;
+		/* Set size in bytes of data */
+		frame.can_dlc = 8;
+		/* Set data */
+		sprintf(frame.data, "8 bytes");
 
-	while (keepRunning) {
-		if (write(s, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
-			perror("Write");
+		while (1) {
+			if (write(s, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
+				perror("Write");
 
-			/* Close connexion */
-			closeSocket(s);
-			
-			return 1;
+				/* Close connexion */
+				closeSocket(s);
+				
+				return 1;
 
-		} /* Send message */
+			} /* Send message */
 
-	
-	} /* Loop until SIGINT */
+		
+		} /* Loop until SIGINT */
+		
+	} else {
+		/* Set filter */
+		rfilter[0].can_id   = 0x100;
+		rfilter[0].can_mask = 0xF00;
+		setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
+
+		while (1) {
+			nbytes = read(s, &frame, sizeof(struct can_frame));
+
+			if (nbytes < 0) {
+				perror("Read");
+
+				/* Close connexion */
+				closeSocket(s);
+
+				return 1;
+			}
+
+			printf("0x%03X [%d] ",frame.can_id, frame.can_dlc);
+
+			for (int i = 0; i < frame.can_dlc; i++)
+				printf("%02X ",frame.data[i]);
+
+			printf("\r\n");
+
+		
+		} /* Loop until SIGINT */
+
+	}
 
 	if (close(s) < 0) {
 		perror("Close");
