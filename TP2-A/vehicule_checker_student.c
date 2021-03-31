@@ -67,7 +67,7 @@ void addIdReceive(int *table, char (*ids)[ID_SIZE], int size, canid_t id_num) {
             table[i] = 1;
 
             printf("Receive : %s\n\r", id);
-            
+
             return;
 
         } /* ID found */
@@ -156,7 +156,25 @@ int main(int argc, char **argv)
 
     } /* Loop until receive all IDs */
 
-    printf("OKKKK\r\n");
+    printf("--- Receive All - Ready ---\r\n");
+
+    /* Set id of message */
+    frame.can_id = 0x123;
+    /* Set size in bytes of data */
+    frame.can_dlc = 2;
+    /* Set data */
+    frame.data[0] = 0;
+    frame.data[1] = 1;
+
+    if (write(s, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
+        perror("Write");
+
+        /* Close connexion */
+        closeSocket(s);
+        
+        return 1;
+
+    } /* Send message */
 
 	if (close(s) < 0) {
 		perror("Close");
