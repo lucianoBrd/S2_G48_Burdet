@@ -76,9 +76,39 @@ void addIdReceive(int *table, char (*ids)[ID_SIZE], int size, canid_t id_num) {
 
 } /* Add ID to the table receive */
 
+
+/**
+ * 
+ * @brief
+ * Permet d'envoyer un message CAN
+ * 
+ * @params
+ * s : Socket
+ * frame : Can Frame
+ * 
+ * @return
+ * Retourne 1 en cas d'erreur, sinon 0
+ * 
+ **/
+int sendMessage(int s, struct can_frame frame) {
+
+    if (write(s, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
+        perror("Write");
+
+        /* Close connexion */
+        closeSocket(s);
+        
+        return 1;
+
+    } /* Send message */
+
+    return 0;
+
+} /* sendMessage */
+
 int main(int argc, char **argv)
 {
-	int s, i, nbytes, receive_id[RECEIVE_ID_SIZE]; 
+	int s, i, nbytes, receive_id[RECEIVE_ID_SIZE], j; 
 	struct sockaddr_can addr;
 	struct ifreq ifr;
 	struct can_frame frame;
@@ -162,19 +192,25 @@ int main(int argc, char **argv)
     frame.can_id = 0x123;
     /* Set size in bytes of data */
     frame.can_dlc = 2;
-    /* Set data */
-    frame.data[0] = 0;
-    frame.data[1] = 1;
 
-    if (write(s, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
-        perror("Write");
+    for (i = 1; i >= 0; i--) {
+        for (j = 1; j < 3; j++) {
+            /* Set data */
+            frame.data[i] = j;
 
-        /* Close connexion */
-        closeSocket(s);
-        
-        return 1;
+            /* Send can message */
+            sendMessage(s, frame);
 
-    } /* Send message */
+            /* Wait 2 secondes */
+            sleep(4);
+
+        } /* Value 1 and 2 */
+
+        /* Reset */
+        frame.data[i] = 0;
+        sendMessage(s, frame);
+
+    } /* For each part of the data */
 
 	if (close(s) < 0) {
 		perror("Close");
