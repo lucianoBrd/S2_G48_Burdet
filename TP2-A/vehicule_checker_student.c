@@ -188,6 +188,7 @@ int main(int argc, char **argv)
 
     printf("--- Receive All - Ready ---\r\n");
 
+    printf("--- Basics check ---\r\n");
     /* Set id of message */
     frame.can_id = 0x123;
     /* Set size in bytes of data */
@@ -201,8 +202,8 @@ int main(int argc, char **argv)
             /* Send can message */
             sendMessage(s, frame);
 
-            /* Wait 2 secondes */
-            sleep(4);
+            /* Wait 3 secondes */
+            sleep(3);
 
         } /* Value 1 and 2 */
 
@@ -211,6 +212,52 @@ int main(int argc, char **argv)
         sendMessage(s, frame);
 
     } /* For each part of the data */
+
+    printf("--- Basics check - Ok ---\r\n");
+
+    printf("--- Drive check ---\r\n");
+    /* Set id of message */
+    frame.can_id = 0x321;
+    /* Set size in bytes of data */
+    frame.can_dlc = 3;
+    /* Set data */
+    frame.data[0] = 70;
+    frame.data[1] = 0;
+    frame.data[2] = 0;
+    /* Send can message */
+    sendMessage(s, frame);
+
+    /* Wait 7 secondes */
+    sleep(7);
+
+    /* Set data */
+    frame.data[0] = 40;
+    frame.data[1] = 0;
+    frame.data[2] = 21;
+    /* Send can message */
+    sendMessage(s, frame);
+
+    /* Wait 3 secondes */
+    sleep(3);
+
+    /* Set data */
+    frame.data[0] = 80;
+    frame.data[1] = 0;
+    frame.data[2] = 0;
+    /* Send can message */
+    sendMessage(s, frame);
+
+    /* Wait 5 secondes */
+    sleep(5);
+
+    /* Set data */
+    frame.data[0] = 0;
+    frame.data[1] = 100;
+    frame.data[2] = 0;
+    /* Send can message */
+    sendMessage(s, frame);
+
+    printf("--- Drive check - Ok ---\r\n");
 
 	if (close(s) < 0) {
 		perror("Close");
