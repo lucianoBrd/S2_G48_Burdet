@@ -14,7 +14,7 @@ void closeSocket(int s) {
  * @brief
  * Permet de savoir si nous avons recu tous les IDs
  * 
- * @params
+ * @param
  * table : Tableau des IDs contenant 0 ou 1 pour chaque ID (1 trouvé, 0 non)
  * size : Taille du tableau
  * 
@@ -36,7 +36,7 @@ int checkReceive(int *table, int size) {
  * @brief
  * Permet d'ajouter l'ID recu a notre tableau des IDs
  * 
- * @params
+ * @param
  * table : Tableau des IDs contenant 0 ou 1 pour chaque ID (1 trouvé, 0 non)
  * ids : Tableau des IDs déjà initialisé => C01 par exemple
  * size : Taille du tableau => identique pour les deux
@@ -69,7 +69,7 @@ void addIdReceive(int *table, char (*ids)[ID_SIZE], int size, canid_t id_num) {
  * @brief
  * Permet d'envoyer un message CAN
  * 
- * @params
+ * @param
  * s : Socket
  * frame : Can Frame
  * 

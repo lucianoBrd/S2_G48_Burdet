@@ -9,17 +9,47 @@ void intHandler(int dummy) {
     keepRunning = 0;
 }
 
+/**
+ * 
+ * @brief Retourn la position de la valeur la plus grande du tableau
+ * 
+ * @param
+ * camera: Tableau des différentes valeur de caméra (taille : CAMERA_SIZE)
+ * 
+ * @return 
+ * La position de la valeur la plus grande
+ * 
+ **/
+int findDirection(int *camera) {
+    int max = camera[0],
+        pos = 0;
+
+    for (int i = 1; i < CAMERA_SIZE; i++) {
+        if (camera[i] > max) {
+            max = camera[i];
+            pos = i;
+
+        } /* Bigger case */
+
+    } /* For each camera */
+
+    return pos;
+
+} /* findDirection */
+
 int main(int argc, char **argv)
 {
 	int s, i, nbytes,
         rpm = 0,
         speed = 0,
-        gear = 0; 
+        gear = 0,
+        camera[CAMERA_SIZE]; 
 	struct sockaddr_can addr;
 	struct ifreq ifr;
 	struct can_frame frame;
 	struct can_filter rfilter[1];
-    char    id[ID_SIZE];
+    char    id[ID_SIZE],
+            direction[3];
     
     printf("Dashboard\r\n");
 
@@ -52,9 +82,11 @@ int main(int argc, char **argv)
 	} /* Bind */
 
     /* Set filter */
-    rfilter[0].can_id   = 0xC06;
-    rfilter[0].can_mask = 0xFFE;
+    rfilter[0].can_id   = 0xC00;
+    rfilter[0].can_mask = 0xFF0;
     setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
+
+    memset(&camera, 0, sizeof(camera));
 
     while (keepRunning) {
         nbytes = read(s, &frame, sizeof(struct can_frame));
@@ -89,9 +121,30 @@ int main(int argc, char **argv)
 
             } /* Check we receive 2 bytes */
 
-        } 
+        } else {
+            /* C00 to C05 */
+            if (frame.can_dlc > 1) {
+                camera[(int)id[0] - 48] = frame.data[0]; /* Convert ASCII to int */
+                
+            } /* Check we receive min 1 bytes */
+        }
 
-        printf("Speed: %d km/h\nGear: %d\nMotor speed: %d rpm\nAction to follow the road: ->\n\n\r", speed, gear, rpm); 
+        int pos = findDirection(camera);
+        if (pos < 2) {
+            /* Left */
+            strcpy(direction, "<-");
+
+        } else if (pos > 3) {
+            /* Right */
+            strcpy(direction, "->");
+
+        } else {
+            /* Straigth */
+            strcpy(direction, "^");
+
+        }
+
+        printf("Speed: %d km/h\nGear: %d\nMotor speed: %d rpm\nAction to follow the road: %s\n\n\r", speed, gear, rpm, direction); 
 
     } /* Loop until stop */
 
