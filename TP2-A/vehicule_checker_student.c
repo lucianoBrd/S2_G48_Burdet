@@ -2,7 +2,7 @@
 #include "vehicule_checker_student.h"
 #include "utils.h"
 
-/* Compile : gcc vehicule_checker_student.c -o vehicule_checker_student */
+/* Compile : make*/
 
 
 int main(int argc, char **argv)
