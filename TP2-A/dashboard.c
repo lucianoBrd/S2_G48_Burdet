@@ -9,34 +9,6 @@ void intHandler(int dummy) {
     keepRunning = 0;
 }
 
-/**
- * 
- * @brief Retourn la position de la valeur la plus grande du tableau
- * 
- * @param
- * camera: Tableau des différentes valeur de caméra (taille : CAMERA_SIZE)
- * 
- * @return 
- * La position de la valeur la plus grande
- * 
- **/
-int findDirection(int *camera) {
-    int max = camera[0],
-        pos = 0;
-
-    for (int i = 1; i < CAMERA_SIZE; i++) {
-        if (camera[i] > max) {
-            max = camera[i];
-            pos = i;
-
-        } /* Bigger case */
-
-    } /* For each camera */
-
-    return pos;
-
-} /* findDirection */
-
 int main(int argc, char **argv)
 {
 	int s, i, nbytes,
