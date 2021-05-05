@@ -59,8 +59,8 @@ int getValueFromVCan0 (int pid, int *a, int *b) {
 	} /* Bind */
 
     /* Set filter */
-    rfilter[0].can_id   = 0xC00;
-    rfilter[0].can_mask = 0xFF0;
+    rfilter[0].can_id   = 0x321;
+    rfilter[0].can_mask = 0x000;
     setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
 
     while (keepRunning) {
@@ -79,11 +79,12 @@ int getValueFromVCan0 (int pid, int *a, int *b) {
 
         /* Cast id num to string */
         sprintf(id, "%X", frame.can_id & 0xf);
-
+//TODO throttle
+printf("%X\n", frame.can_id);
         if (id[0] == '6') {
             /* C06 case */
             if (frame.can_dlc == 2) {
-                rpm = ((frame.data[1] << 8) & 0xff00) | (frame.data[0] & 0x00ff);
+                rpm = (((frame.data[1] << 8) & 0xff00) | (frame.data[0] & 0x00ff)) / 4;
                 *a = frame.data[1];
                 *b = frame.data[0];
 

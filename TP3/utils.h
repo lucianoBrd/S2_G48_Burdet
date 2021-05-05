@@ -19,6 +19,7 @@
 
 #define PID_SPEED 13 /* 0D */
 #define PID_RPM 12 /* 0C */
+#define PID_THROTTLE 11 /* 11 */
 
 /**
  * 

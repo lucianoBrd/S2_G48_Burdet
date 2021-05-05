@@ -80,7 +80,7 @@ int main(int argc, char **argv)
         if (id[0] == '6') {
             /* C06 case */
             if (frame.can_dlc == 2) {
-                rpm = ((frame.data[1] << 8) & 0xff00) | (frame.data[0] & 0x00ff);
+                rpm = (((frame.data[1] << 8) & 0xff00) | (frame.data[0] & 0x00ff)) / 4;
 
             } /* Check we receive 2 bytes */
             
