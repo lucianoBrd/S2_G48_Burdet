@@ -17,6 +17,9 @@
 #define ID_SIZE 4
 #define CAMERA_SIZE 6
 
+#define PID_SPEED 13 /* 0D */
+#define PID_RPM 12 /* 0C */
+
 /**
  * 
  * @brief Retourn la position de la valeur la plus grande du tableau

@@ -12,18 +12,14 @@ void intHandler(int dummy) {
 int main(int argc, char **argv)
 {
 	int s, i, nbytes,
-        rpm = 0,
-        speed = 0,
-        gear = 0,
-        camera[CAMERA_SIZE]; 
+        send = 0; 
 	struct sockaddr_can addr;
 	struct ifreq ifr;
 	struct can_frame frame;
 	struct can_filter rfilter[1];
-    char    id[ID_SIZE],
-            direction[3];
+    char    id[ID_SIZE];
     
-    printf("Dashboard\r\n");
+    printf("User OBD2 Terminal\r\n");
 
     /* Catch ctr+c */
     signal(SIGINT, intHandler);
@@ -35,7 +31,7 @@ int main(int argc, char **argv)
 	} /* Open socket */
 
 	/* Use vcan0 */
-	strcpy(ifr.ifr_name, "vcan0");
+	strcpy(ifr.ifr_name, "vcan1");
 	ioctl(s, SIOCGIFINDEX, &ifr);
 
 	/* Initialize */
@@ -54,69 +50,81 @@ int main(int argc, char **argv)
 	} /* Bind */
 
     /* Set filter */
-    rfilter[0].can_id   = 0xC00;
-    rfilter[0].can_mask = 0xFF0;
+    rfilter[0].can_id   = 0x7E8;
+    rfilter[0].can_mask = 0xFFF;
     setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
 
-    memset(&camera, 0, sizeof(camera));
-
     while (keepRunning) {
-        nbytes = read(s, &frame, sizeof(struct can_frame));
 
-        if (nbytes < 0) {
-            perror("Read");
+        if (send == 0) {
+            /* Send case */
+            printf("Enter 1, 2 or 3 in order to know :\n1. - Vehicle Speed -\n2. - Engine RPM -\n3. - Throttle position -\n");
+            int input = -1;
+            /* Get user input */
+            scanf("%d", &input);
+            printf("\r\n");
 
-            /* Close connexion */
-            closeSocket(s);
+            if (input >= 1 && input <= 3) {
 
-            return 1;
-        }
-        
-        char id[ID_SIZE];
+                int pid; 
 
-        /* Cast id num to string */
-        sprintf(id, "%X", frame.can_id & 0xf);
+                if (input == 1) {
+                    pid = PID_SPEED;
+                } else if (input == 2) {
+                    pid = PID_RPM;
+                } else {
+                    pid = PID_SPEED;
+                }
 
-        if (id[0] == '6') {
-            /* C06 case */
-            if (frame.can_dlc == 2) {
-                rpm = ((frame.data[1] << 8) & 0xff00) | (frame.data[0] & 0x00ff);
+                /* Set id of message */
+                frame.can_id = 0x7DF;
+                /* Set size in bytes of data */
+                frame.can_dlc = 8;
+                /* Set data */
+                frame.data[0] = 2;
+                frame.data[1] = 1;
+                frame.data[2] = pid;
+                frame.data[3] = 55;
+                frame.data[4] = 55;
+                frame.data[5] = 55;
+                frame.data[6] = 55;
+                frame.data[7] = 55;
 
-            } /* Check we receive 2 bytes */
+                /* Send can message */
+                sendMessage(s, frame);
+                send = 1;
+
+            } else {
+                printf("Wrong input! try Again.\n");
+
+            }
+
+        } else {
+            /* Receive case */
+            nbytes = read(s, &frame, sizeof(struct can_frame));
+
+            if (nbytes < 0) {
+                perror("Read");
+
+                /* Close connexion */
+                closeSocket(s);
+
+                return 1;
+            }
             
+            if (frame.can_dlc == 8) {
+                printf("0x%03X [%d] ",frame.can_id, frame.can_dlc);
 
-        } else if (id[0] == '7') {
-            /* C07 case */
-            if (frame.can_dlc == 2) {
-                speed = frame.data[0];
-                gear = frame.data[1];
+                /* Display what we receive */
+                for (i = 0; i < frame.can_dlc; i++)
+                    printf("%02X ",frame.data[i]);
 
-            } /* Check we receive 2 bytes */
+                printf("\r\n\n");
 
-        } else {
-            /* C00 to C05 */
-            if (frame.can_dlc > 1) {
-                camera[(int)id[0] - 48] = frame.data[0]; /* Convert ASCII to int */
-                
-            } /* Check we receive min 1 bytes */
-        }
-
-        int pos = findDirection(camera);
-        if (pos < 2) {
-            /* Left */
-            strcpy(direction, "<-");
-
-        } else if (pos > 3) {
-            /* Right */
-            strcpy(direction, "->");
-
-        } else {
-            /* Straigth */
-            strcpy(direction, "^");
+                send = 0;
+            }
 
         }
-
-        printf("Speed: %d km/h\nGear: %d\nMotor speed: %d rpm\nAction to follow the road: %s\n\n\r", speed, gear, rpm, direction); 
 
     } /* Loop until stop */
 
