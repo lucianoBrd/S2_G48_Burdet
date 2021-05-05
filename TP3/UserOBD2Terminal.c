@@ -113,11 +113,27 @@ int main(int argc, char **argv)
             }
             
             if (frame.can_dlc == 8) {
-                printf("0x%03X [%d] ",frame.can_id, frame.can_dlc);
+                printf("0x%03X [%d] ", frame.can_id, frame.can_dlc);
 
                 /* Display what we receive */
                 for (i = 0; i < frame.can_dlc; i++)
                     printf("%02X ",frame.data[i]);
+
+                printf("\nFor OBD2 converter : ");
+
+                for (i = 1; i < frame.can_dlc; i++)
+                    printf("%02X",frame.data[i]);
+
+                /* Get PID */
+                int pid = frame.data[2];
+                if (PID_SPEED == pid) {
+                    printf("\n%d km/h", frame.data[3]);
+
+                } else if (PID_RPM == pid) {
+                    int rpm = (frame.data[3] * 256 + frame.data[4]) / 4;
+                    printf("\n%d rpm", rpm);
+                    
+                }
 
                 printf("\r\n\n");
 

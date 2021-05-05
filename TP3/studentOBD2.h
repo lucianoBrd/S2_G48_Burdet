@@ -10,11 +10,13 @@
  * 
  * @param
  * pid : PID de OBD2
+ * a : Pointeur pour retourner le premier octet
+ * b : Pointeur pour retourner le second octet
  * 
  * @return
  * Retourne -1 en cas d'erreur, sinon la valeur souhaitée
  * 
  **/
-int getValueFromVCan0 (int pid);
+int getValueFromVCan0 (int pid, int *a, int *b);
 
 #endif

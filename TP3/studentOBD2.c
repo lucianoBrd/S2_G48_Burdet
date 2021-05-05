@@ -16,12 +16,14 @@ void intHandler(int dummy) {
  * 
  * @param
  * pid : PID de OBD2
+ * a : Pointeur pour retourner le premier octet
+ * b : Pointeur pour retourner le second octet
  * 
  * @return
  * Retourne -1 en cas d'erreur, sinon la valeur souhaitée
  * 
  **/
-int getValueFromVCan0 (int pid) {
+int getValueFromVCan0 (int pid, int *a, int *b) {
     int s, i, nbytes,
         rpm = -1,
         speed = -1; 
@@ -82,6 +84,8 @@ int getValueFromVCan0 (int pid) {
             /* C06 case */
             if (frame.can_dlc == 2) {
                 rpm = ((frame.data[1] << 8) & 0xff00) | (frame.data[0] & 0x00ff);
+                *a = frame.data[1];
+                *b = frame.data[0];
 
             } /* Check we receive 2 bytes */
             
@@ -90,6 +94,8 @@ int getValueFromVCan0 (int pid) {
             /* C07 case */
             if (frame.can_dlc == 2) {
                 speed = frame.data[0];
+                *a = frame.data[0];
+                *b = -1;
 
             } /* Check we receive 2 bytes */
 
@@ -114,6 +120,7 @@ int getValueFromVCan0 (int pid) {
     closeSocket(s);
 
     return -1;
+
 } /* getValueFromVCan0 */
 
 int main(int argc, char **argv)
@@ -176,9 +183,11 @@ int main(int argc, char **argv)
         
         if (frame.can_dlc == 8) {
             /* Get PID */
-            int pid = frame.data[2];
+            int pid = frame.data[2],
+                a   = -1,
+                b   = -1;
 
-            int value = getValueFromVCan0(pid);
+            int value = getValueFromVCan0(pid, &a, &b);
 
             if (value == -1) {
                 printf("Une erreur est survenue.\r\n");
@@ -197,7 +206,7 @@ int main(int argc, char **argv)
                 /* Seed case */
                 /* Set data */
                 frame.data[0] = 3;
-                frame.data[3] = value;
+                frame.data[3] = a;
                 frame.data[4] = 0xAA;
                 frame.data[5] = 0xAA;
                 frame.data[6] = 0xAA;
@@ -207,8 +216,8 @@ int main(int argc, char **argv)
                 /* RPM case */
                 /* Set data */
                 frame.data[0] = 4;
-                frame.data[3] = value;
-                frame.data[4] = value;
+                frame.data[3] = a;
+                frame.data[4] = b;
                 frame.data[5] = 0xAA;
                 frame.data[6] = 0xAA;
                 frame.data[7] = 0xAA;
