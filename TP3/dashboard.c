@@ -72,12 +72,10 @@ int main(int argc, char **argv)
             return 1;
         }
         
-        char id[ID_SIZE];
+        /* Get just the id */
+        int can_id = (frame.can_id & CAN_EFF_FLAG) ? (frame.can_id & CAN_EFF_MASK) : (frame.can_id & CAN_SFF_MASK);
 
-        /* Cast id num to string */
-        sprintf(id, "%X", frame.can_id & 0xf);
-
-        if (id[0] == '6') {
+        if (can_id == 0xC06) {
             /* C06 case */
             if (frame.can_dlc == 2) {
                 rpm = (((frame.data[1] << 8) & 0xff00) | (frame.data[0] & 0x00ff)) / 4;
@@ -85,7 +83,7 @@ int main(int argc, char **argv)
             } /* Check we receive 2 bytes */
             
 
-        } else if (id[0] == '7') {
+        } else if (can_id == 0xC07) {
             /* C07 case */
             if (frame.can_dlc == 2) {
                 speed = frame.data[0];

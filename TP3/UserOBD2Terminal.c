@@ -73,7 +73,7 @@ int main(int argc, char **argv)
                 } else if (input == 2) {
                     pid = PID_RPM;
                 } else {
-                    pid = PID_SPEED;
+                    pid = PID_THROTTLE;
                 }
 
                 /* Set id of message */
@@ -132,6 +132,10 @@ int main(int argc, char **argv)
                 } else if (PID_RPM == pid) {
                     int rpm = (frame.data[3] * 256 + frame.data[4]) / 4;
                     printf("\n%d rpm", rpm);
+                    
+                } else if (PID_THROTTLE == pid) {
+                    float throttle = (100.0 / 255.0) * (float)frame.data[3];
+                    printf("\n%.2f %c", throttle, 37);
                     
                 }
 

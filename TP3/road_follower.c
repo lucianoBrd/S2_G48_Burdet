@@ -83,8 +83,9 @@ int main(int argc, char **argv)
 
         } else {
             /* C00 to C05 */
-            if (frame.can_dlc > 1) {
-                camera[(int)id[0] - 48] = frame.data[0]; /* Convert ASCII to int */
+            int num_id = id[0] - 48;
+            if (frame.can_dlc > 1 && num_id >= 0 && num_id < CAMERA_SIZE) {
+                camera[num_id] = frame.data[0]; /* Convert ASCII to int */
                 
             } /* Check we receive min 1 bytes */
         }

@@ -26,7 +26,8 @@ void intHandler(int dummy) {
 int getValueFromVCan0 (int pid, int *a, int *b) {
     int s, i, nbytes,
         rpm = -1,
-        speed = -1; 
+        speed = -1,
+        throttle = -1; 
 	struct sockaddr_can addr;
 	struct ifreq ifr;
 	struct can_frame frame;
@@ -75,13 +76,10 @@ int getValueFromVCan0 (int pid, int *a, int *b) {
             return -1;
         }
         
-        char id[ID_SIZE];
+        /* Get just the id */
+        int can_id = (frame.can_id & CAN_EFF_FLAG) ? (frame.can_id & CAN_EFF_MASK) : (frame.can_id & CAN_SFF_MASK);
 
-        /* Cast id num to string */
-        sprintf(id, "%X", frame.can_id & 0xf);
-//TODO throttle
-printf("%X\n", frame.can_id);
-        if (id[0] == '6') {
+        if (can_id == 0xC06) {
             /* C06 case */
             if (frame.can_dlc == 2) {
                 rpm = (((frame.data[1] << 8) & 0xff00) | (frame.data[0] & 0x00ff)) / 4;
@@ -91,10 +89,19 @@ printf("%X\n", frame.can_id);
             } /* Check we receive 2 bytes */
             
 
-        } else if (id[0] == '7') {
+        } else if (can_id == 0xC07) {
             /* C07 case */
             if (frame.can_dlc == 2) {
                 speed = frame.data[0];
+                *a = frame.data[0];
+                *b = -1;
+
+            } /* Check we receive 2 bytes */
+
+        } else if (can_id == 0x321) {
+            /* C07 case */
+            if (frame.can_dlc == 3) {
+                throttle = frame.data[0];
                 *a = frame.data[0];
                 *b = -1;
 
@@ -112,6 +119,11 @@ printf("%X\n", frame.can_id);
             /* RPM case */
             if (rpm >= 0) {
                 return rpm;
+            }
+        } else if (PID_THROTTLE == pid) {
+            /* RPM case */
+            if (throttle >= 0) {
+                return throttle;
             }
         }
 
@@ -219,6 +231,16 @@ int main(int argc, char **argv)
                 frame.data[0] = 4;
                 frame.data[3] = a;
                 frame.data[4] = b;
+                frame.data[5] = 0xAA;
+                frame.data[6] = 0xAA;
+                frame.data[7] = 0xAA;
+
+            } else if (PID_THROTTLE == pid) {
+                /* Throttle case */
+                /* Set data */
+                frame.data[0] = 3;
+                frame.data[3] = a;
+                frame.data[4] = 0xAA;
                 frame.data[5] = 0xAA;
                 frame.data[6] = 0xAA;
                 frame.data[7] = 0xAA;
