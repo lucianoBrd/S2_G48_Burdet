@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 
         if (send == 0) {
             /* Send case */
-            printf("Enter 1, 2 or 3 in order to know :\n1. - Vehicle Speed -\n2. - Engine RPM -\n3. - Throttle position -\n");
+            printf("Enter 1, 2 or 3 in order to know :\n1. - Vehicle Speed -\n2. - Engine RPM -\n3. - Throttle position -\n0. - Exit -\n");
             int input = -1;
             /* Get user input */
             scanf("%d", &input);
@@ -95,7 +95,11 @@ int main(int argc, char **argv)
                 send = 1;
 
             } else {
-                printf("Wrong input! try Again.\n");
+                if (input == 0) {
+                    keepRunning = 0;
+                } else {
+                    printf("Wrong input! try Again.\n");
+                }
 
             }
 
