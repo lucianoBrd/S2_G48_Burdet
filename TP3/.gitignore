@@ -3,4 +3,5 @@ dashboard
 road_follower
 studentOBD2
 UserOBD2Terminal
+sensorsCAN
 *.o
