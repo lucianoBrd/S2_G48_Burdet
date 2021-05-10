@@ -53,8 +53,6 @@ void addIdReceive(int *table, char (*ids)[ID_SIZE], int size, canid_t id_num) {
         if (strcmp(id, ids[i]) == 0) {
             table[i] = 1;
 
-            printf("Receive : %s\n\r", id);
-
             return;
 
         } /* ID found */

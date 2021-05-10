@@ -16,6 +16,7 @@
 #define RECEIVE_ID_SIZE 8
 #define ID_SIZE 4
 #define CAMERA_SIZE 6
+#define CAN_FD_SIZE 52
 
 #define PID_SPEED 13 /* 0D */
 #define PID_RPM 12 /* 0C */
